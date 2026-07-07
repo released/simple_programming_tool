@@ -217,6 +217,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build_mfc.ps1 -Confi
 Output:
 
 - `build\SimpleProgrammingTool.exe`
+- `build\simple_programming_tool.ini`
 
 The build script closes a running `SimpleProgrammingTool.exe` before compiling.
 
@@ -240,9 +241,14 @@ The 4KB LDROM CRC-validating target sample expects the APP image or post-build s
 
 Before publishing, confirm that only source, documentation, and sanitized images are staged.
 
+The `.gitignore` intentionally keeps:
+
+- `build\SimpleProgrammingTool.exe` as the ready-to-run PC tool.
+- `build\simple_programming_tool.ini` as the default settings file.
+
 The `.gitignore` intentionally excludes:
 
-- `build/` PC binaries, objects, generated INI, and logs.
+- PC build intermediates under `build\obj\` and debug/link artifacts under `build\`.
 - Keil `obj/`, `lst/`, `.uvguix.*`, `.uvoptx`, `Nu_Link_Driver.ini`, and build logs.
 - GCC/Eclipse local `preferences.ini`.
 - Root `FW_Upload_*.jpg` screenshots because they may contain local machine paths. Use `docs/images/*.png` in documentation instead.
@@ -254,5 +260,3 @@ git status --ignored
 git add --dry-run .
 rg -n --hidden --glob "!build/**" --glob "!demo_code/**/Keil/obj/**" --glob "!demo_code/**/Keil/lst/**" --glob "!demo_code/**/KEIL/obj/**" --glob "!demo_code/**/KEIL/lst/**" "[A-Z]:\\\\|Users\\\\" .
 ```
-
-If prebuilt executables are needed, publish them as GitHub Release assets instead of committing the `build/` directory.

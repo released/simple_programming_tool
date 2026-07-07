@@ -11,8 +11,18 @@ teraterm.log
 # README uses sanitized copies under docs/images/.
 FW_Upload_*.jpg
 
-# PC build outputs and runtime INI
-build/
+# PC build outputs
+build/*
+!build/SimpleProgrammingTool.exe
+!build/simple_programming_tool.ini
+build/obj/
+build/*.lib
+build/*.exp
+build/*.pdb
+build/*.ilk
+build/*.idb
+build/*.iobj
+build/*.ipdb
 
 # Keil local/user/build outputs
 demo_code/**/Keil/lst/
