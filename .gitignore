@@ -1,0 +1,32 @@
+# Local runtime state
+.agents/
+.vs/
+.vscode/
+*.user
+*.suo
+teraterm.log
+*.log
+
+# Local raw screenshots may contain machine paths.
+# README uses sanitized copies under docs/images/.
+FW_Upload_*.jpg
+
+# PC build outputs and runtime INI
+build/
+
+# Keil local/user/build outputs
+demo_code/**/Keil/lst/
+demo_code/**/Keil/obj/
+demo_code/**/KEIL/lst/
+demo_code/**/KEIL/obj/
+demo_code/**/Keil/*.uvguix.*
+demo_code/**/KEIL/*.uvguix.*
+demo_code/**/Keil/*.uvoptx
+demo_code/**/KEIL/*.uvoptx
+demo_code/**/Keil/Nu_Link_Driver.ini
+demo_code/**/KEIL/Nu_Link_Driver.ini
+demo_code/**/Keil/build_*.log
+demo_code/**/KEIL/build_*.log
+
+# GCC/Eclipse local state
+demo_code/**/GCC/preferences.ini

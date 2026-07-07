@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{6A21E281-39FA-4F0A-89C8-525C539A74EE}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>SimpleProgrammingTool</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Static</UseOfMfc>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <UseOfMfc>Static</UseOfMfc>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Static</UseOfMfc>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <UseOfMfc>Static</UseOfMfc>
+  </PropertyGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+
+  <PropertyGroup>
+    <OutDir>$(SolutionDir)build\</OutDir>
+    <IntDir>$(SolutionDir)build\obj\$(Platform)\$(Configuration)\</IntDir>
+    <TargetName>SimpleProgrammingTool</TargetName>
+  </PropertyGroup>
+
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <PreBuildEvent>
+      <Command>powershell -NoProfile -ExecutionPolicy Bypass -File "$(SolutionDir)scripts\bump_version.ps1" -RcPath "$(SolutionDir)src\simple_programming_tool.rc" -HeaderPath "$(SolutionDir)src\build_info.generated.h"</Command>
+    </PreBuildEvent>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <AdditionalDependencies>setupapi.lib;hid.lib;cfgmgr32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_UNICODE;UNICODE;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_UNICODE;UNICODE;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PreprocessorDefinitions>_WINDOWS;_UNICODE;UNICODE;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <PreprocessorDefinitions>_WINDOWS;_UNICODE;UNICODE;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <ProgramDatabaseFile>$(IntDir)SimpleProgrammingTool.pdb</ProgramDatabaseFile>
+    </Link>
+  </ItemDefinitionGroup>
+
+  <ItemGroup>
+    <ClCompile Include="src\app.cpp" />
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\main_frame.cpp" />
+    <ClCompile Include="src\config\ini_manager.cpp" />
+    <ClCompile Include="src\core\app_state.cpp" />
+    <ClCompile Include="src\core\bridge_service.cpp" />
+    <ClCompile Include="src\core\nuvo_isp_i2c.cpp" />
+    <ClCompile Include="src\core\nuvo_isp_uart.cpp" />
+    <ClCompile Include="src\core\pin_usage_registry.cpp" />
+    <ClCompile Include="src\core\text_utils.cpp" />
+    <ClCompile Include="src\core\xmodem_sender.cpp" />
+    <ClCompile Include="src\hid\hid_bridge_client.cpp" />
+    <ClCompile Include="src\hid\hid_scan.cpp" />
+    <ClCompile Include="src\log\logger.cpp" />
+    <ClCompile Include="src\ui\fw_upload_tab.cpp" />
+    <ClCompile Include="src\ui\uart_isp_tab.cpp" />
+    <ClCompile Include="src\ui\xmodem_tab.cpp" />
+    <ClCompile Include="src\vcom\serial_frame.cpp" />
+    <ClCompile Include="src\vcom\serial_port.cpp" />
+    <ClCompile Include="src\vcom\vcom_bridge_client.cpp" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ResourceCompile Include="src\simple_programming_tool.rc" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ClInclude Include="src\app.h" />
+    <ClInclude Include="src\build_info.generated.h" />
+    <ClInclude Include="src\main_frame.h" />
+    <ClInclude Include="src\resource.h" />
+    <ClInclude Include="src\config\ini_manager.h" />
+    <ClInclude Include="src\core\app_state.h" />
+    <ClInclude Include="src\core\board_i2c_catalog.h" />
+    <ClInclude Include="src\core\bridge_commands.h" />
+    <ClInclude Include="src\core\bridge_service.h" />
+    <ClInclude Include="src\core\fw_version.generated.h" />
+    <ClInclude Include="src\core\nuvo_isp_i2c.h" />
+    <ClInclude Include="src\core\nuvo_isp_uart.h" />
+    <ClInclude Include="src\core\pin_usage_registry.h" />
+    <ClInclude Include="src\core\text_utils.h" />
+    <ClInclude Include="src\core\xmodem_sender.h" />
+    <ClInclude Include="src\hid\hid_bridge_client.h" />
+    <ClInclude Include="src\hid\hid_scan.h" />
+    <ClInclude Include="src\hid\hid_types.h" />
+    <ClInclude Include="src\log\logger.h" />
+    <ClInclude Include="src\ui\fw_upload_tab.h" />
+    <ClInclude Include="src\ui\layout_utils.h" />
+    <ClInclude Include="src\ui\uart_isp_tab.h" />
+    <ClInclude Include="src\ui\xmodem_tab.h" />
+    <ClInclude Include="src\vcom\serial_frame.h" />
+    <ClInclude Include="src\vcom\serial_port.h" />
+    <ClInclude Include="src\vcom\vcom_bridge_client.h" />
+  </ItemGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets" />
+</Project>
