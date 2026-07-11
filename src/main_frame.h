@@ -14,6 +14,7 @@
 #include "log/logger.h"
 #include "ui/fw_upload_tab.h"
 #include "ui/uart_isp_tab.h"
+#include "ui/usb_hid_isp_tab.h"
 #include "ui/xmodem_tab.h"
 
 class CMainFrame : public CFrameWnd {
@@ -24,6 +25,8 @@ protected:
     BOOL PreCreateWindow(CREATESTRUCT& cs) override;
     afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
     afx_msg void OnSize(UINT nType, int cx, int cy);
+    afx_msg LRESULT OnDpiChanged(WPARAM wParam, LPARAM lParam);
+    afx_msg void OnGetMinMaxInfo(MINMAXINFO* lpMMI);
     afx_msg void OnTabSelChange(NMHDR* pNMHDR, LRESULT* pResult);
     afx_msg void OnBnClickedLoadImage();
     afx_msg void OnBnClickedSaveIni();
@@ -37,6 +40,8 @@ protected:
     DECLARE_MESSAGE_MAP()
 
 private:
+    void RecreateUiFont();
+    void ApplyTopControlFont();
     void LayoutControls(int cx, int cy);
     void InitializeTabs();
     void ShowActiveTabPage();
@@ -59,6 +64,7 @@ private:
 
 private:
     CFont ui_font_;
+    UINT current_dpi_ = 96u;
 
     CButton image_group_;
     CStatic image_path_label_;
@@ -78,6 +84,7 @@ private:
     CFwUploadTab fw_upload_tab_;
     CUartIspTab uart_isp_tab_;
     CXmodemTab xmodem_tab_;
+    CUsbHidIspTab usb_hid_isp_tab_;
     CButton save_log_check_;
     CButton save_log_btn_;
     CButton clear_log_btn_;

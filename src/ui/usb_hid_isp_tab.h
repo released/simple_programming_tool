@@ -3,15 +3,17 @@
 #include <afxcmn.h>
 #include <afxwin.h>
 
+#include <array>
 #include <cstdint>
 #include <functional>
 #include <string>
 #include <vector>
 
 #include "../core/app_state.h"
-#include "../core/nuvo_isp_uart.h"
+#include "../core/nuvo_isp_usb_hid.h"
+#include "../hid/hid_types.h"
 
-class CUartIspTab : public CWnd {
+class CUsbHidIspTab : public CWnd {
 public:
     BOOL Create(CWnd* parent, const RECT& rect, UINT id);
 
@@ -28,10 +30,9 @@ public:
 protected:
     afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
     afx_msg void OnSize(UINT nType, int cx, int cy);
-    afx_msg void OnRefreshCom();
-    afx_msg void OnOpenCom();
-    afx_msg void OnCloseCom();
-    afx_msg void OnLoadImage();
+    afx_msg void OnRefreshHid();
+    afx_msg void OnConnectHid();
+    afx_msg void OnDisconnectHid();
     afx_msg void OnConnectTarget();
     afx_msg void OnGetDeviceId();
     afx_msg void OnProgram();
@@ -43,25 +44,31 @@ protected:
 
 private:
     void LayoutControls(const CRect& r);
-    void RefreshComPorts();
-    void PopulateBaudCombo();
+    void RefreshDevices();
     void UpdateEnableState();
     void SaveVisibleToState();
     void LoadVisibleFromState();
-    void EnsureUartConnected();
-    void LoadImageFromPath(const std::wstring& path);
-    void SetImagePathText();
+    void EnsureHidConnected();
+    struct BootloaderConnectResult {
+        std::uint8_t fw_version = 0;
+        std::uint32_t device_id = 0;
+        std::array<std::uint32_t, 4> config = {};
+        bool config_valid = false;
+    };
+    BootloaderConnectResult ConnectBootloaderFlow();
     void SetStatusText(const std::wstring& text);
     void AppendStatusText(const std::wstring& text);
     void SetProgress(int value, const std::wstring& text);
     void SetTargetReady(bool ready, const std::wstring& text = L"");
     void PumpUiMessages();
 
-    std::wstring SelectedComPort() const;
-    std::uint32_t SelectedBaudrate() const;
+    std::uint16_t CurrentVid() const;
+    std::uint16_t CurrentPid() const;
     int CurrentTimeoutMs() const;
+    std::wstring SelectedDevicePath() const;
     std::wstring GetEditText(const CEdit& edit) const;
     void ApplyComboSelection(CComboBox& combo, const std::wstring& value);
+    static std::wstring DeviceLabel(const mfc_tool::hid::DeviceInfo& d, int index);
     static std::wstring AnsiToWide(const char* text);
     static std::wstring FormatHex32(std::uint32_t value);
 
@@ -70,9 +77,9 @@ private:
     std::function<const std::vector<std::uint8_t>&()> firmware_image_data_;
     std::function<std::wstring()> firmware_image_path_;
     std::function<void()> persist_settings_;
-    mfc_tool::core::NuvoIspUartClient client_;
-    mfc_tool::core::UartIspState state_;
-    std::vector<std::uint8_t> image_data_;
+    mfc_tool::core::NuvoIspUsbHidClient client_;
+    mfc_tool::core::UsbHidIspState state_;
+    std::vector<mfc_tool::hid::DeviceInfo> scanned_devices_;
 
     bool loading_ = false;
     bool busy_ = false;
@@ -83,21 +90,17 @@ private:
     CBrush target_ready_brush_;
     CBrush target_idle_brush_;
     CButton conn_group_;
-    CStatic com_label_;
-    CComboBox com_combo_;
-    CStatic baud_label_;
-    CComboBox baud_combo_;
+    CStatic vid_label_;
+    CEdit vid_edit_;
+    CStatic pid_label_;
+    CEdit pid_edit_;
     CStatic timeout_label_;
     CEdit timeout_edit_;
-    CButton refresh_com_btn_;
-    CButton open_com_btn_;
-    CButton close_com_btn_;
-
-    CButton file_group_;
-    CStatic path_label_;
-    CEdit path_edit_;
-    CButton load_image_btn_;
-    CStatic file_info_label_;
+    CStatic device_label_;
+    CComboBox device_combo_;
+    CButton refresh_hid_btn_;
+    CButton connect_hid_btn_;
+    CButton disconnect_hid_btn_;
 
     CButton action_group_;
     CButton connect_target_btn_;

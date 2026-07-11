@@ -60,6 +60,7 @@
     <ClCompile Include="src\core\bridge_service.cpp"><Filter>Source Files\core</Filter></ClCompile>
     <ClCompile Include="src\core\nuvo_isp_i2c.cpp"><Filter>Source Files\core</Filter></ClCompile>
     <ClCompile Include="src\core\nuvo_isp_uart.cpp"><Filter>Source Files\core</Filter></ClCompile>
+    <ClCompile Include="src\core\nuvo_isp_usb_hid.cpp"><Filter>Source Files\core</Filter></ClCompile>
     <ClCompile Include="src\core\pin_usage_registry.cpp"><Filter>Source Files\core</Filter></ClCompile>
     <ClCompile Include="src\core\text_utils.cpp"><Filter>Source Files\core</Filter></ClCompile>
     <ClCompile Include="src\core\xmodem_sender.cpp"><Filter>Source Files\core</Filter></ClCompile>
@@ -68,6 +69,7 @@
     <ClCompile Include="src\log\logger.cpp"><Filter>Source Files\log</Filter></ClCompile>
     <ClCompile Include="src\ui\fw_upload_tab.cpp"><Filter>Source Files\ui</Filter></ClCompile>
     <ClCompile Include="src\ui\uart_isp_tab.cpp"><Filter>Source Files\ui</Filter></ClCompile>
+    <ClCompile Include="src\ui\usb_hid_isp_tab.cpp"><Filter>Source Files\ui</Filter></ClCompile>
     <ClCompile Include="src\ui\xmodem_tab.cpp"><Filter>Source Files\ui</Filter></ClCompile>
     <ClCompile Include="src\vcom\serial_frame.cpp"><Filter>Source Files\vcom</Filter></ClCompile>
     <ClCompile Include="src\vcom\serial_port.cpp"><Filter>Source Files\vcom</Filter></ClCompile>
@@ -87,6 +89,7 @@
     <ClInclude Include="src\core\fw_version.generated.h"><Filter>Header Files\core</Filter></ClInclude>
     <ClInclude Include="src\core\nuvo_isp_i2c.h"><Filter>Header Files\core</Filter></ClInclude>
     <ClInclude Include="src\core\nuvo_isp_uart.h"><Filter>Header Files\core</Filter></ClInclude>
+    <ClInclude Include="src\core\nuvo_isp_usb_hid.h"><Filter>Header Files\core</Filter></ClInclude>
     <ClInclude Include="src\core\pin_usage_registry.h"><Filter>Header Files\core</Filter></ClInclude>
     <ClInclude Include="src\core\text_utils.h"><Filter>Header Files\core</Filter></ClInclude>
     <ClInclude Include="src\core\xmodem_sender.h"><Filter>Header Files\core</Filter></ClInclude>
@@ -97,6 +100,7 @@
     <ClInclude Include="src\ui\fw_upload_tab.h"><Filter>Header Files\ui</Filter></ClInclude>
     <ClInclude Include="src\ui\layout_utils.h"><Filter>Header Files\ui</Filter></ClInclude>
     <ClInclude Include="src\ui\uart_isp_tab.h"><Filter>Header Files\ui</Filter></ClInclude>
+    <ClInclude Include="src\ui\usb_hid_isp_tab.h"><Filter>Header Files\ui</Filter></ClInclude>
     <ClInclude Include="src\ui\xmodem_tab.h"><Filter>Header Files\ui</Filter></ClInclude>
     <ClInclude Include="src\vcom\serial_frame.h"><Filter>Header Files\vcom</Filter></ClInclude>
     <ClInclude Include="src\vcom\serial_port.h"><Filter>Header Files\vcom</Filter></ClInclude>

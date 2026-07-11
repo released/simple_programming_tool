@@ -81,7 +81,7 @@ int CXmodemTab::OnCreate(LPCREATESTRUCT lpCreateStruct) {
         return -1;
     }
 
-    ui_font_.CreatePointFont(90, L"Segoe UI");
+    (void)mfc_tool::ui::CreatePointFontForWindow(ui_font_, *this, 90);
     auto fail = [this](BOOL ok, const wchar_t* name) -> bool {
         if (!ok && log_) {
             log_(std::wstring(L"Create XMODEM control failed: ") + name);
@@ -134,20 +134,38 @@ void CXmodemTab::OnSize(UINT nType, int cx, int cy) {
         return;
     }
     LayoutControls(CRect(0, 0, cx, cy));
+    RedrawWindow(nullptr, nullptr,
+                 RDW_INVALIDATE | RDW_ERASE | RDW_ERASENOW | RDW_FRAME | RDW_ALLCHILDREN | RDW_UPDATENOW);
+}
+
+void CXmodemTab::RefreshDpiLayout() {
+    if (!::IsWindow(GetSafeHwnd())) {
+        return;
+    }
+    (void)mfc_tool::ui::CreatePointFontForWindow(ui_font_, *this, 90);
+    mfc_tool::ui::ApplyFontToChildWindows(*this, ui_font_, FALSE);
+    CRect page;
+    GetClientRect(&page);
+    LayoutControls(page);
+    RedrawWindow(nullptr, nullptr, RDW_INVALIDATE | RDW_ERASE | RDW_FRAME | RDW_ALLCHILDREN | RDW_UPDATENOW);
 }
 
 void CXmodemTab::LayoutControls(const CRect& r) {
-    const int margin = 8;
-    const int gap = 6;
-    const int row = 26;
-    const int label_y_pad = 4;
-    const int group_top_pad = 22;
+    const mfc_tool::ui::DpiScaler dpi = mfc_tool::ui::DpiScaler::FromWindow(*this);
+    const mfc_tool::ui::LayoutMetrics metrics = mfc_tool::ui::MetricsForWindow(*this);
+    const int margin = metrics.margin8;
+    const int gap = metrics.gap;
+    const int row = metrics.row26;
+    const int label_y_pad = dpi.Scale(4);
+    const int group_top_pad = metrics.groupTopPad;
+    const int label_h = metrics.label18;
+    const int label_pad = dpi.Scale(8);
     const int left = r.left;
     const int bottom = r.bottom;
-    const int inner_left = r.left + margin + 12;
-    const int available_w = (std::max)(240, r.Width() - margin * 2);
-    const int conn_h = 104;
-    const int action_h = 144;
+    const int inner_left = r.left + margin + dpi.Scale(12);
+    const int available_w = (std::max)(dpi.Scale(240), r.Width() - margin * 2);
+    const int conn_h = dpi.Scale(104);
+    const int action_h = dpi.Scale(132);
     int x;
     int y = r.top + margin;
 
@@ -155,16 +173,16 @@ void CXmodemTab::LayoutControls(const CRect& r) {
     x = inner_left;
     {
         const int yy1 = y + group_top_pad;
-        const int yy2 = yy1 + row + 8;
-        x = mfc_tool::ui::PlaceLabelAndControl(com_label_, com_combo_, x, yy1 + label_y_pad, yy1, 110, row + 120, gap, 8) + gap;
-        x = mfc_tool::ui::PlaceLabelAndControl(baud_label_, baud_combo_, x, yy1 + label_y_pad, yy1, 106, row + 120, gap, 8) + gap;
-        x = mfc_tool::ui::PlaceLabelAndControl(timeout_label_, timeout_edit_, x, yy1 + label_y_pad, yy1, 80, row, gap, 8) + gap;
-        mfc_tool::ui::SafeMoveWindow(refresh_com_btn_, x, yy1, (std::max)(104, mfc_tool::ui::MeasureButtonMinWidth(refresh_com_btn_)), row);
+        const int yy2 = yy1 + row + dpi.Scale(8);
+        x = mfc_tool::ui::PlaceLabelAndControl(com_label_, com_combo_, x, yy1 + label_y_pad, yy1, dpi.Scale(110), row + metrics.comboDrop120, gap, label_pad, label_h) + gap;
+        x = mfc_tool::ui::PlaceLabelAndControl(baud_label_, baud_combo_, x, yy1 + label_y_pad, yy1, dpi.Scale(106), row + metrics.comboDrop120, gap, label_pad, label_h) + gap;
+        x = mfc_tool::ui::PlaceLabelAndControl(timeout_label_, timeout_edit_, x, yy1 + label_y_pad, yy1, dpi.Scale(80), row, gap, label_pad, label_h) + gap;
+        mfc_tool::ui::SafeMoveWindow(refresh_com_btn_, x, yy1, (std::max)(dpi.Scale(104), mfc_tool::ui::MeasureButtonMinWidth(refresh_com_btn_)), row);
 
         x = inner_left;
-        mfc_tool::ui::SafeMoveWindow(open_com_btn_, x, yy2, (std::max)(94, mfc_tool::ui::MeasureButtonMinWidth(open_com_btn_)), row);
-        x += (std::max)(94, mfc_tool::ui::MeasureButtonMinWidth(open_com_btn_)) + gap;
-        mfc_tool::ui::SafeMoveWindow(close_com_btn_, x, yy2, (std::max)(94, mfc_tool::ui::MeasureButtonMinWidth(close_com_btn_)), row);
+        mfc_tool::ui::SafeMoveWindow(open_com_btn_, x, yy2, (std::max)(dpi.Scale(94), mfc_tool::ui::MeasureButtonMinWidth(open_com_btn_)), row);
+        x += (std::max)(dpi.Scale(94), mfc_tool::ui::MeasureButtonMinWidth(open_com_btn_)) + gap;
+        mfc_tool::ui::SafeMoveWindow(close_com_btn_, x, yy2, (std::max)(dpi.Scale(94), mfc_tool::ui::MeasureButtonMinWidth(close_com_btn_)), row);
     }
 
     y += conn_h + gap;
@@ -172,20 +190,20 @@ void CXmodemTab::LayoutControls(const CRect& r) {
     x = inner_left;
     {
         const int yy = y + group_top_pad;
-        const int send_w = (std::max)(112, mfc_tool::ui::MeasureButtonMinWidth(send_xmodem_btn_));
-        const int cancel_w = (std::max)(78, mfc_tool::ui::MeasureButtonMinWidth(cancel_btn_));
+        const int send_w = (std::max)(dpi.Scale(112), mfc_tool::ui::MeasureButtonMinWidth(send_xmodem_btn_));
+        const int cancel_w = (std::max)(dpi.Scale(78), mfc_tool::ui::MeasureButtonMinWidth(cancel_btn_));
         mfc_tool::ui::SafeMoveWindow(send_xmodem_btn_, x, yy, send_w, row);
         x += send_w + gap;
         mfc_tool::ui::SafeMoveWindow(cancel_btn_, x, yy, cancel_w, row);
-        mfc_tool::ui::SafeMoveWindow(transfer_state_label_, inner_left, yy + row + 8, available_w - 24, 24);
-        mfc_tool::ui::SafeMoveWindow(progress_, inner_left, yy + row + 38, available_w - 24, 18);
-        mfc_tool::ui::SafeMoveWindow(progress_label_, inner_left, yy + row + 60, available_w - 24, 18);
+        mfc_tool::ui::SafeMoveWindow(transfer_state_label_, inner_left, yy + row + dpi.Scale(8), available_w - dpi.Scale(24), metrics.row24);
+        mfc_tool::ui::SafeMoveWindow(progress_, inner_left, yy + row + dpi.Scale(38), available_w - dpi.Scale(24), label_h);
+        mfc_tool::ui::SafeMoveWindow(progress_label_, inner_left, yy + row + dpi.Scale(60), available_w - dpi.Scale(24), label_h);
     }
 
     y += action_h + gap;
-    mfc_tool::ui::SafeMoveWindow(status_group_, left + margin, y, available_w, (std::max)(80, bottom - y - margin));
-    mfc_tool::ui::SafeMoveWindow(status_edit_, inner_left, y + group_top_pad, available_w - 24,
-                                 (std::max)(46, bottom - y - margin - group_top_pad - 8));
+    mfc_tool::ui::SafeMoveWindow(status_group_, left + margin, y, available_w, (std::max)(dpi.Scale(80), bottom - y - margin));
+    mfc_tool::ui::SafeMoveWindow(status_edit_, inner_left, y + group_top_pad, available_w - dpi.Scale(24),
+                                 (std::max)(dpi.Scale(46), bottom - y - margin - group_top_pad - dpi.Scale(8)));
 }
 
 void CXmodemTab::RefreshComPorts() {

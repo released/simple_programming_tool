@@ -140,6 +140,7 @@
     <ClCompile Include="src\core\bridge_service.cpp" />
     <ClCompile Include="src\core\nuvo_isp_i2c.cpp" />
     <ClCompile Include="src\core\nuvo_isp_uart.cpp" />
+    <ClCompile Include="src\core\nuvo_isp_usb_hid.cpp" />
     <ClCompile Include="src\core\pin_usage_registry.cpp" />
     <ClCompile Include="src\core\text_utils.cpp" />
     <ClCompile Include="src\core\xmodem_sender.cpp" />
@@ -148,6 +149,7 @@
     <ClCompile Include="src\log\logger.cpp" />
     <ClCompile Include="src\ui\fw_upload_tab.cpp" />
     <ClCompile Include="src\ui\uart_isp_tab.cpp" />
+    <ClCompile Include="src\ui\usb_hid_isp_tab.cpp" />
     <ClCompile Include="src\ui\xmodem_tab.cpp" />
     <ClCompile Include="src\vcom\serial_frame.cpp" />
     <ClCompile Include="src\vcom\serial_port.cpp" />
@@ -171,6 +173,7 @@
     <ClInclude Include="src\core\fw_version.generated.h" />
     <ClInclude Include="src\core\nuvo_isp_i2c.h" />
     <ClInclude Include="src\core\nuvo_isp_uart.h" />
+    <ClInclude Include="src\core\nuvo_isp_usb_hid.h" />
     <ClInclude Include="src\core\pin_usage_registry.h" />
     <ClInclude Include="src\core\text_utils.h" />
     <ClInclude Include="src\core\xmodem_sender.h" />
@@ -181,6 +184,7 @@
     <ClInclude Include="src\ui\fw_upload_tab.h" />
     <ClInclude Include="src\ui\layout_utils.h" />
     <ClInclude Include="src\ui\uart_isp_tab.h" />
+    <ClInclude Include="src\ui\usb_hid_isp_tab.h" />
     <ClInclude Include="src\ui\xmodem_tab.h" />
     <ClInclude Include="src\vcom\serial_frame.h" />
     <ClInclude Include="src\vcom\serial_port.h" />

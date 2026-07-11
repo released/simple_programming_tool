@@ -3,6 +3,7 @@
 #include <afxdlgs.h>
 
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <cstring>
 #include <cwchar>
@@ -38,6 +39,8 @@ std::wstring NowTimeText() {
 BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
     ON_WM_CREATE()
     ON_WM_SIZE()
+    ON_MESSAGE(WM_DPICHANGED, &CMainFrame::OnDpiChanged)
+    ON_WM_GETMINMAXINFO()
     ON_NOTIFY(TCN_SELCHANGE, ID_TAB_CTRL, &CMainFrame::OnTabSelChange)
     ON_BN_CLICKED(ID_TOP_LOAD_IMAGE_BTN, &CMainFrame::OnBnClickedLoadImage)
     ON_BN_CLICKED(ID_TOP_SAVE_INI_BTN, &CMainFrame::OnBnClickedSaveIni)
@@ -70,7 +73,8 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct) {
         return -1;
     }
 
-    ui_font_.CreatePointFont(90, L"Segoe UI");
+    current_dpi_ = mfc_tool::ui::GetDpiForWnd(*this);
+    RecreateUiFont();
     HICON app_icon = AfxGetApp()->LoadIconW(IDR_MAINFRAME);
     SetIcon(app_icon, TRUE);
     SetIcon(app_icon, FALSE);
@@ -108,6 +112,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct) {
     if (!fw_upload_tab_.Create(&tab_ctrl_, tab_dummy, ID_TAB_FW_UPLOAD)) return -1;
     if (!uart_isp_tab_.Create(&tab_ctrl_, tab_dummy, ID_TAB_UART_ISP)) return -1;
     if (!xmodem_tab_.Create(&tab_ctrl_, tab_dummy, ID_TAB_XMODEM)) return -1;
+    if (!usb_hid_isp_tab_.Create(&tab_ctrl_, tab_dummy, ID_TAB_USB_HID_ISP)) return -1;
 
     auto tab_log = [this](const std::wstring& msg) { AppendLog(msg); };
     auto firmware_image_data = [this]() -> const std::vector<std::uint8_t>& { return firmware_image_data_; };
@@ -115,17 +120,9 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct) {
     fw_upload_tab_.Bind(&service_, tab_log, &pin_usage_, firmware_image_data, firmware_image_path, [this]() { SaveIni(); });
     uart_isp_tab_.Bind(tab_log, firmware_image_data, firmware_image_path, [this]() { SaveIni(); });
     xmodem_tab_.Bind(tab_log, firmware_image_data, firmware_image_path, [this]() { SaveIni(); });
+    usb_hid_isp_tab_.Bind(tab_log, firmware_image_data, firmware_image_path, [this]() { SaveIni(); });
 
-    std::vector<CWnd*> controls = {
-        &image_group_, &image_path_label_, &image_path_edit_, &load_image_btn_, &image_info_label_,
-        &save_ini_btn_,
-        &load_ini_btn_, &reset_ini_btn_, &ini_path_title_, &ini_path_value_, &build_info_title_,
-        &build_info_value_, &tab_ctrl_,
-        &save_log_check_, &save_log_btn_, &clear_log_btn_, &log_edit_
-    };
-    for (CWnd* w : controls) {
-        w->SetFont(&ui_font_);
-    }
+    ApplyTopControlFont();
 
     InitializeTabs();
     save_log_check_.SetCheck(state_.ui.save_log_checked ? BST_CHECKED : BST_UNCHECKED);
@@ -149,34 +146,95 @@ void CMainFrame::OnSize(UINT nType, int cx, int cy) {
     LayoutControls(cx, cy);
 }
 
+LRESULT CMainFrame::OnDpiChanged(WPARAM wParam, LPARAM lParam) {
+    current_dpi_ = HIWORD(wParam);
+    RecreateUiFont();
+    ApplyTopControlFont();
+    fw_upload_tab_.RefreshDpiLayout();
+    uart_isp_tab_.RefreshDpiLayout();
+    xmodem_tab_.RefreshDpiLayout();
+    usb_hid_isp_tab_.RefreshDpiLayout();
+
+    const RECT* suggested_rect = reinterpret_cast<const RECT*>(lParam);
+    if (suggested_rect != nullptr) {
+        SetWindowPos(nullptr,
+                     suggested_rect->left,
+                     suggested_rect->top,
+                     suggested_rect->right - suggested_rect->left,
+                     suggested_rect->bottom - suggested_rect->top,
+                     SWP_NOZORDER | SWP_NOACTIVATE);
+    }
+
+    CRect rc;
+    GetClientRect(&rc);
+    LayoutControls(rc.Width(), rc.Height());
+    RedrawWindow(nullptr, nullptr, RDW_INVALIDATE | RDW_ERASE | RDW_FRAME | RDW_ALLCHILDREN | RDW_UPDATENOW);
+    return 0;
+}
+
+void CMainFrame::OnGetMinMaxInfo(MINMAXINFO* lpMMI) {
+    CFrameWnd::OnGetMinMaxInfo(lpMMI);
+    if (lpMMI == nullptr) {
+        return;
+    }
+
+    const mfc_tool::ui::DpiScaler dpi(current_dpi_ != 0u ? current_dpi_ : mfc_tool::ui::GetDpiForWnd(*this));
+    lpMMI->ptMinTrackSize.x = (std::max)(lpMMI->ptMinTrackSize.x, static_cast<LONG>(dpi.Scale(1180)));
+    lpMMI->ptMinTrackSize.y = (std::max)(lpMMI->ptMinTrackSize.y, static_cast<LONG>(dpi.Scale(760)));
+}
+
+void CMainFrame::RecreateUiFont() {
+    (void)mfc_tool::ui::CreatePointFontForWindow(ui_font_, *this, 90);
+}
+
+void CMainFrame::ApplyTopControlFont() {
+    const std::array<CWnd*, 17> controls = {
+        &image_group_, &image_path_label_, &image_path_edit_, &load_image_btn_, &image_info_label_,
+        &save_ini_btn_, &load_ini_btn_, &reset_ini_btn_, &ini_path_title_, &ini_path_value_,
+        &build_info_title_, &build_info_value_, &tab_ctrl_, &save_log_check_, &save_log_btn_,
+        &clear_log_btn_, &log_edit_
+    };
+    for (CWnd* w : controls) {
+        if (w != nullptr && ::IsWindow(w->GetSafeHwnd())) {
+            w->SetFont(&ui_font_, FALSE);
+        }
+    }
+}
+
 void CMainFrame::LayoutControls(int cx, int cy) {
     if (cx <= 0 || cy <= 0) {
         return;
     }
 
-    const int margin = 8;
-    const int gap = 6;
-    const int row_h = 26;
-    const int label_y_pad = 4;
-    const int label_pad = 10;
-    const int group_top_pad = 22;
-    const int log_h = (std::max)(120, cy / 5);
-    int btn_w = 86;
+    const mfc_tool::ui::DpiScaler dpi(current_dpi_ != 0u ? current_dpi_ : mfc_tool::ui::GetDpiForWnd(*this));
+    const mfc_tool::ui::LayoutMetrics metrics = mfc_tool::ui::MetricsForWindow(*this);
+    const int margin = metrics.margin8;
+    const int gap = metrics.gap;
+    const int row_h = metrics.row26;
+    const int label_h = metrics.label18;
+    const int label_y_pad = dpi.Scale(4);
+    const int label_pad = dpi.Scale(10);
+    const int group_top_pad = metrics.groupTopPad;
+    const bool compact_vertical = dpi.Dpi() >= 144u;
+    const int log_min_h = compact_vertical ? dpi.Scale(64) : dpi.Scale(120);
+    const int log_preferred_h = compact_vertical ? cy / 9 : cy / 5;
+    const int log_h = (std::max)(log_min_h, log_preferred_h);
+    int btn_w = dpi.Scale(86);
     btn_w = (std::max)(btn_w, mfc_tool::ui::MeasureButtonMinWidth(save_ini_btn_));
     btn_w = (std::max)(btn_w, mfc_tool::ui::MeasureButtonMinWidth(load_image_btn_));
 
     int y = margin;
     int x = margin;
-    const int image_h = 76;
+    const int image_h = dpi.Scale(76);
     const int load_image_w = (std::max)(btn_w, mfc_tool::ui::MeasureButtonMinWidth(load_image_btn_));
     mfc_tool::ui::SafeMoveWindow(image_group_, margin, y, cx - margin * 2, image_h);
-    x = margin + 12;
+    x = margin + dpi.Scale(12);
     {
         const int yy = y + group_top_pad;
         x += mfc_tool::ui::PlaceLabel(image_path_label_, x, yy + label_y_pad, label_pad) + gap;
         mfc_tool::ui::SafeMoveWindow(load_image_btn_, cx - margin - load_image_w, yy, load_image_w, row_h);
-        mfc_tool::ui::SafeMoveWindow(image_path_edit_, x, yy, (std::max)(160, cx - margin - load_image_w - gap - x), row_h);
-        mfc_tool::ui::SafeMoveWindow(image_info_label_, margin + 12, yy + row_h + 4, cx - margin * 2 - 24, 18);
+        mfc_tool::ui::SafeMoveWindow(image_path_edit_, x, yy, (std::max)(dpi.Scale(160), cx - margin - load_image_w - gap - x), row_h);
+        mfc_tool::ui::SafeMoveWindow(image_info_label_, margin + dpi.Scale(12), yy + row_h + dpi.Scale(4), cx - margin * 2 - dpi.Scale(24), label_h);
     }
 
     y += image_h + gap;
@@ -186,13 +244,13 @@ void CMainFrame::LayoutControls(int cx, int cy) {
     const int load_w = (std::max)(btn_w, mfc_tool::ui::MeasureButtonMinWidth(load_ini_btn_));
     const int reset_w = (std::max)(btn_w, mfc_tool::ui::MeasureButtonMinWidth(reset_ini_btn_));
     const int ini_buttons_w = save_w + load_w + reset_w + gap * 2;
-    const int ini_buttons_x = (std::max)(x + 160, cx - margin - ini_buttons_w);
-    const int build_block_w = 360;
-    const int build_x = (std::max)(x + 160, ini_buttons_x - build_block_w - gap);
-    mfc_tool::ui::SafeMoveWindow(ini_path_value_, x, y + label_y_pad, (std::max)(120, build_x - x - gap), 18);
+    const int ini_buttons_x = (std::max)(x + dpi.Scale(160), cx - margin - ini_buttons_w);
+    const int build_block_w = dpi.Scale(360);
+    const int build_x = (std::max)(x + dpi.Scale(160), ini_buttons_x - build_block_w - gap);
+    mfc_tool::ui::SafeMoveWindow(ini_path_value_, x, y + label_y_pad, (std::max)(dpi.Scale(120), build_x - x - gap), label_h);
     x = build_x;
     x += mfc_tool::ui::PlaceLabel(build_info_title_, x, y + label_y_pad, label_pad) + gap;
-    mfc_tool::ui::SafeMoveWindow(build_info_value_, x, y + label_y_pad, (std::max)(120, ini_buttons_x - x - gap), 18);
+    mfc_tool::ui::SafeMoveWindow(build_info_value_, x, y + label_y_pad, (std::max)(dpi.Scale(120), ini_buttons_x - x - gap), label_h);
     x = ini_buttons_x;
     mfc_tool::ui::SafeMoveWindow(save_ini_btn_, x, y, save_w, row_h);
     x += save_w + gap;
@@ -204,9 +262,9 @@ void CMainFrame::LayoutControls(int cx, int cy) {
     const int top_h = y;
     const int log_y = cy - log_h - margin;
     const int log_btn_y = log_y - row_h - gap;
-    mfc_tool::ui::SafeMoveWindow(save_log_check_, margin, log_btn_y + 3, 110, 20);
-    mfc_tool::ui::SafeMoveWindow(save_log_btn_, margin + 116, log_btn_y, btn_w, row_h);
-    mfc_tool::ui::SafeMoveWindow(clear_log_btn_, margin + 116 + btn_w + gap, log_btn_y, btn_w, row_h);
+    mfc_tool::ui::SafeMoveWindow(save_log_check_, margin, log_btn_y + dpi.Scale(3), dpi.Scale(110), metrics.checkbox20);
+    mfc_tool::ui::SafeMoveWindow(save_log_btn_, margin + dpi.Scale(116), log_btn_y, btn_w, row_h);
+    mfc_tool::ui::SafeMoveWindow(clear_log_btn_, margin + dpi.Scale(116) + btn_w + gap, log_btn_y, btn_w, row_h);
     mfc_tool::ui::SafeMoveWindow(log_edit_, margin, log_y, cx - margin * 2, cy - log_y - margin);
     mfc_tool::ui::SafeMoveWindow(tab_ctrl_, margin, top_h, cx - margin * 2, (std::max)(120, log_btn_y - top_h - gap));
     ShowActiveTabPage();
@@ -217,7 +275,11 @@ void CMainFrame::InitializeTabs() {
     tab_ctrl_.InsertItem(0, L"FW Upload (I2C)");
     tab_ctrl_.InsertItem(1, L"FW Upload (UART ISP)");
     tab_ctrl_.InsertItem(2, L"FW Upload (XMODEM)");
-    tab_ctrl_.SetItemSize(CSize(190, 24));
+    tab_ctrl_.InsertItem(3, L"FW Upload (USB HID)");
+    {
+        const mfc_tool::ui::DpiScaler dpi(current_dpi_ != 0u ? current_dpi_ : mfc_tool::ui::GetDpiForWnd(*this));
+        tab_ctrl_.SetItemSize(CSize(dpi.Scale(190), dpi.Scale(24)));
+    }
     tab_ctrl_.SetCurSel(0);
     ShowActiveTabPage();
 }
@@ -229,16 +291,22 @@ void CMainFrame::ShowActiveTabPage() {
     CRect rc;
     tab_ctrl_.GetClientRect(&rc);
     tab_ctrl_.AdjustRect(FALSE, &rc);
-    rc.DeflateRect(4, 4, 4, 4);
+    {
+        const mfc_tool::ui::DpiScaler dpi(current_dpi_ != 0u ? current_dpi_ : mfc_tool::ui::GetDpiForWnd(*this));
+        const int page_pad = dpi.Scale(4);
+        rc.DeflateRect(page_pad, page_pad, page_pad, page_pad);
+    }
 
     mfc_tool::ui::SafeMoveWindow(fw_upload_tab_, rc);
     mfc_tool::ui::SafeMoveWindow(uart_isp_tab_, rc);
     mfc_tool::ui::SafeMoveWindow(xmodem_tab_, rc);
+    mfc_tool::ui::SafeMoveWindow(usb_hid_isp_tab_, rc);
 
     const int sel = tab_ctrl_.GetCurSel();
     fw_upload_tab_.ShowWindow(sel == 0 ? SW_SHOW : SW_HIDE);
     uart_isp_tab_.ShowWindow(sel == 1 ? SW_SHOW : SW_HIDE);
     xmodem_tab_.ShowWindow(sel == 2 ? SW_SHOW : SW_HIDE);
+    usb_hid_isp_tab_.ShowWindow(sel == 3 ? SW_SHOW : SW_HIDE);
 }
 
 void CMainFrame::OnTabSelChange(NMHDR* pNMHDR, LRESULT* pResult) {
@@ -347,6 +415,7 @@ void CMainFrame::RefreshSharedImageState() {
     fw_upload_tab_.RefreshSharedImageState();
     uart_isp_tab_.RefreshSharedImageState();
     xmodem_tab_.RefreshSharedImageState();
+    usb_hid_isp_tab_.RefreshSharedImageState();
 }
 
 void CMainFrame::LoadIni() {
@@ -359,6 +428,7 @@ void CMainFrame::LoadIni() {
         fw_upload_tab_.LoadState(state_);
         uart_isp_tab_.LoadState(state_);
         xmodem_tab_.LoadState(state_);
+        usb_hid_isp_tab_.LoadState(state_);
         RefreshSharedImageState();
         SaveIni();
         AppendLog(L"INI created with defaults.");
@@ -374,6 +444,7 @@ void CMainFrame::LoadIni() {
     fw_upload_tab_.LoadState(state_);
     uart_isp_tab_.LoadState(state_);
     xmodem_tab_.LoadState(state_);
+    usb_hid_isp_tab_.LoadState(state_);
     firmware_image_data_.clear();
     SetFirmwareImagePathText();
     if (!state_.ui.firmware_image_path.empty()) {
@@ -388,6 +459,7 @@ void CMainFrame::SaveIni() {
     fw_upload_tab_.SaveState(&state_);
     uart_isp_tab_.SaveState(&state_);
     xmodem_tab_.SaveState(&state_);
+    usb_hid_isp_tab_.SaveState(&state_);
     state_.ui.save_log_checked = (save_log_check_.GetCheck() == BST_CHECKED);
 
     std::wstring error;
@@ -420,6 +492,7 @@ void CMainFrame::ResetIniToDefault() {
     fw_upload_tab_.LoadState(state_);
     uart_isp_tab_.LoadState(state_);
     xmodem_tab_.LoadState(state_);
+    usb_hid_isp_tab_.LoadState(state_);
     RefreshSharedImageState();
     SaveIni();
 }
@@ -540,6 +613,7 @@ void CMainFrame::OnClose() {
     fw_upload_tab_.OnDisconnected();
     uart_isp_tab_.OnShutdown();
     xmodem_tab_.OnShutdown();
+    usb_hid_isp_tab_.OnShutdown();
     service_.Disconnect();
     CFrameWnd::OnClose();
 }

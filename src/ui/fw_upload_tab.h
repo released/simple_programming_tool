@@ -26,6 +26,7 @@ public:
     void SetConnected(bool connected);
     void OnDisconnected();
     void RefreshSharedImageState();
+    void RefreshDpiLayout();
 
     void LoadState(const mfc_tool::core::AppState& state);
     void SaveState(mfc_tool::core::AppState* state) const;

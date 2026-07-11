@@ -149,7 +149,7 @@ int CFwUploadTab::OnCreate(LPCREATESTRUCT lpCreateStruct) {
         return -1;
     }
 
-    ui_font_.CreatePointFont(90, L"Segoe UI");
+    (void)mfc_tool::ui::CreatePointFontForWindow(ui_font_, *this, 90);
     bridge_status_brush_.CreateSolidBrush(bridge_status_color_);
     target_ready_brush_.CreateSolidBrush(RGB(48, 158, 98));
     target_idle_brush_.CreateSolidBrush(RGB(226, 226, 226));
@@ -254,26 +254,43 @@ void CFwUploadTab::OnSize(UINT nType, int cx, int cy) {
     if (!::IsWindow(config_group_.GetSafeHwnd())) {
         return;
     }
-    CRect r(0, 0, cx, cy);
-    LayoutControls(r);
+    LayoutControls(CRect(0, 0, cx, cy));
+    RedrawWindow(nullptr, nullptr,
+                 RDW_INVALIDATE | RDW_ERASE | RDW_ERASENOW | RDW_FRAME | RDW_ALLCHILDREN | RDW_UPDATENOW);
+}
+
+void CFwUploadTab::RefreshDpiLayout() {
+    if (!::IsWindow(GetSafeHwnd())) {
+        return;
+    }
+    (void)mfc_tool::ui::CreatePointFontForWindow(ui_font_, *this, 90);
+    mfc_tool::ui::ApplyFontToChildWindows(*this, ui_font_, FALSE);
+    CRect page;
+    GetClientRect(&page);
+    LayoutControls(page);
+    RedrawWindow(nullptr, nullptr, RDW_INVALIDATE | RDW_ERASE | RDW_FRAME | RDW_ALLCHILDREN | RDW_UPDATENOW);
 }
 
 void CFwUploadTab::LayoutControls(const CRect& r) {
-    const int margin = 8;
-    const int gap = 6;
-    const int row = 26;
-    const int label_y_pad = 4;
-    const int group_top_pad = 22;
+    const mfc_tool::ui::DpiScaler dpi = mfc_tool::ui::DpiScaler::FromWindow(*this);
+    const mfc_tool::ui::LayoutMetrics metrics = mfc_tool::ui::MetricsForWindow(*this);
+    const int margin = metrics.margin8;
+    const int gap = metrics.gap;
+    const int row = metrics.row26;
+    const int label_y_pad = dpi.Scale(4);
+    const int group_top_pad = metrics.groupTopPad;
+    const int label_h = metrics.label18;
+    const int label_pad = dpi.Scale(8);
     const int left = static_cast<int>(r.left);
     const int right = static_cast<int>(r.right);
     const int top = static_cast<int>(r.top);
     const int bottom = static_cast<int>(r.bottom);
-    const int inner_left = r.left + margin + 12;
-    const int available_w = (std::max)(240, r.Width() - margin * 2);
-    const int bridge_h = 120;
-    const int config_h = 104;
-    const int action_h = 144;
-    int btn_w = 86;
+    const int inner_left = r.left + margin + dpi.Scale(12);
+    const int available_w = (std::max)(dpi.Scale(240), r.Width() - margin * 2);
+    const int bridge_h = dpi.Scale(116);
+    const int config_h = dpi.Scale(96);
+    const int action_h = dpi.Scale(132);
+    int btn_w = dpi.Scale(86);
     int x;
     int y;
 
@@ -287,10 +304,10 @@ void CFwUploadTab::LayoutControls(const CRect& r) {
         const int vcom_w = transport_w - hid_w - gap;
         const int hid_x = left + margin;
         const int vcom_x = hid_x + hid_w + gap;
-        const int hid_inner = hid_x + 12;
-        const int hid_right = hid_x + hid_w - 12;
-        const int vcom_inner = vcom_x + 12;
-        const int vcom_right = vcom_x + vcom_w - 12;
+        const int hid_inner = hid_x + dpi.Scale(12);
+        const int hid_right = hid_x + hid_w - dpi.Scale(12);
+        const int vcom_inner = vcom_x + dpi.Scale(12);
+        const int vcom_right = vcom_x + vcom_w - dpi.Scale(12);
         const int connect_w = (std::max)(btn_w, mfc_tool::ui::MeasureButtonMinWidth(connect_btn_));
         const int disconnect_w = (std::max)(btn_w, mfc_tool::ui::MeasureButtonMinWidth(disconnect_btn_));
         const int refresh_vcom_w = (std::max)(btn_w, mfc_tool::ui::MeasureButtonMinWidth(refresh_vcom_btn_));
@@ -300,19 +317,19 @@ void CFwUploadTab::LayoutControls(const CRect& r) {
         mfc_tool::ui::SafeMoveWindow(hid_group_, hid_x, y, hid_w, bridge_h);
         {
             const int yy1 = y + group_top_pad;
-            const int yy2 = yy1 + row + 6;
-            const int yy3 = yy2 + row + 6;
+            const int yy2 = yy1 + row + gap;
+            const int yy3 = yy2 + row + gap;
             x = hid_inner;
-            mfc_tool::ui::SafeMoveWindow(hid_check_, x, yy1 + 2, 56, 20);
-            x += 62;
-            x = mfc_tool::ui::PlaceLabelAndControl(vid_label_, vid_edit_, x, yy1 + label_y_pad, yy1, 72, row, gap, 8) + gap;
-            x = mfc_tool::ui::PlaceLabelAndControl(pid_label_, pid_edit_, x, yy1 + label_y_pad, yy1, 72, row, gap, 8) + gap;
+            mfc_tool::ui::SafeMoveWindow(hid_check_, x, yy1 + dpi.Scale(2), dpi.Scale(56), metrics.checkbox20);
+            x += dpi.Scale(62);
+            x = mfc_tool::ui::PlaceLabelAndControl(vid_label_, vid_edit_, x, yy1 + label_y_pad, yy1, dpi.Scale(72), row, gap, label_pad, label_h) + gap;
+            x = mfc_tool::ui::PlaceLabelAndControl(pid_label_, pid_edit_, x, yy1 + label_y_pad, yy1, dpi.Scale(72), row, gap, label_pad, label_h) + gap;
             mfc_tool::ui::SafeMoveWindow(refresh_btn_, (std::max)(x, hid_right - btn_w), yy1, btn_w, row);
 
             x = hid_inner;
-            x = mfc_tool::ui::PlaceLabelAndControl(timeout_label_, timeout_edit_, x, yy2 + label_y_pad, yy2, 68, row, gap, 8) + gap;
-            x += mfc_tool::ui::PlaceLabel(device_label_, x, yy2 + label_y_pad, 8) + gap;
-            mfc_tool::ui::SafeMoveWindow(device_combo_, x, yy2, (std::max)(120, hid_right - x), row + 120);
+            x = mfc_tool::ui::PlaceLabelAndControl(timeout_label_, timeout_edit_, x, yy2 + label_y_pad, yy2, dpi.Scale(68), row, gap, label_pad, label_h) + gap;
+            x += mfc_tool::ui::PlaceLabel(device_label_, x, yy2 + label_y_pad, label_pad, label_h) + gap;
+            mfc_tool::ui::SafeMoveWindow(device_combo_, x, yy2, (std::max)(dpi.Scale(120), hid_right - x), row + metrics.comboDrop120);
 
             x = hid_inner;
             mfc_tool::ui::SafeMoveWindow(connect_btn_, x, yy3, connect_w, row);
@@ -323,13 +340,13 @@ void CFwUploadTab::LayoutControls(const CRect& r) {
         mfc_tool::ui::SafeMoveWindow(vcom_group_, vcom_x, y, vcom_w, bridge_h);
         {
             const int yy1 = y + group_top_pad;
-            const int yy2 = yy1 + row + 6;
+            const int yy2 = yy1 + row + gap;
             x = vcom_inner;
-            mfc_tool::ui::SafeMoveWindow(vcom_check_, x, yy1 + 2, 68, 20);
-            x += 74;
-            x = mfc_tool::ui::PlaceLabelAndControl(vcom_label_, vcom_combo_, x, yy1 + label_y_pad, yy1, 124, row + 120, gap, 8) + gap;
-            x += mfc_tool::ui::PlaceLabel(vcom_baud_label_, x, yy1 + label_y_pad, 8) + gap;
-            mfc_tool::ui::SafeMoveWindow(vcom_baud_combo_, x, yy1, (std::max)(90, vcom_right - x), row + 120);
+            mfc_tool::ui::SafeMoveWindow(vcom_check_, x, yy1 + dpi.Scale(2), dpi.Scale(68), metrics.checkbox20);
+            x += dpi.Scale(74);
+            x = mfc_tool::ui::PlaceLabelAndControl(vcom_label_, vcom_combo_, x, yy1 + label_y_pad, yy1, dpi.Scale(124), row + metrics.comboDrop120, gap, label_pad, label_h) + gap;
+            x += mfc_tool::ui::PlaceLabel(vcom_baud_label_, x, yy1 + label_y_pad, label_pad, label_h) + gap;
+            mfc_tool::ui::SafeMoveWindow(vcom_baud_combo_, x, yy1, (std::max)(dpi.Scale(90), vcom_right - x), row + metrics.comboDrop120);
 
             x = vcom_inner;
             mfc_tool::ui::SafeMoveWindow(refresh_vcom_btn_, x, yy2, refresh_vcom_w, row);
@@ -342,37 +359,37 @@ void CFwUploadTab::LayoutControls(const CRect& r) {
 
     y += bridge_h + gap;
     x = left + margin;
-    x += mfc_tool::ui::PlaceLabel(bridge_status_title_, x, y + label_y_pad, 10) + gap;
-    mfc_tool::ui::SafeMoveWindow(bridge_status_chip_, x, y + 1, 138, row - 2);
-    x += 148;
+    x += mfc_tool::ui::PlaceLabel(bridge_status_title_, x, y + label_y_pad, dpi.Scale(10), label_h) + gap;
+    mfc_tool::ui::SafeMoveWindow(bridge_status_chip_, x, y + dpi.Scale(1), dpi.Scale(138), row - dpi.Scale(2));
+    x += dpi.Scale(148);
     mfc_tool::ui::SafeMoveWindow(get_info_btn_, x, y, btn_w, row);
     x += btn_w + gap;
     mfc_tool::ui::SafeMoveWindow(ping_btn_, x, y, btn_w, row);
     x += btn_w + gap;
-    mfc_tool::ui::SafeMoveWindow(reset_mcu_btn_, x, y, btn_w + 8, row);
-    x += btn_w + 18;
-    x += mfc_tool::ui::PlaceLabel(fw_info_title_, x, y + label_y_pad, 10) + gap;
-    mfc_tool::ui::SafeMoveWindow(fw_info_value_, x, y + label_y_pad, (std::max)(120, right - margin - x), 18);
+    mfc_tool::ui::SafeMoveWindow(reset_mcu_btn_, x, y, btn_w + dpi.Scale(8), row);
+    x += btn_w + dpi.Scale(18);
+    x += mfc_tool::ui::PlaceLabel(fw_info_title_, x, y + label_y_pad, dpi.Scale(10), label_h) + gap;
+    mfc_tool::ui::SafeMoveWindow(fw_info_value_, x, y + label_y_pad, (std::max)(dpi.Scale(120), right - margin - x), label_h);
 
     y += row + gap;
     mfc_tool::ui::SafeMoveWindow(config_group_, left + margin, y, available_w, config_h);
     x = inner_left;
     {
         const int yy1 = y + group_top_pad;
-        const int yy2 = yy1 + row + 8;
-        const int pins_label_w = mfc_tool::ui::MeasureControlTextWidth(pins_label_, 8);
+        const int yy2 = yy1 + row + dpi.Scale(8);
+        const int pins_label_w = mfc_tool::ui::MeasureControlTextWidth(pins_label_, label_pad);
 
-        x = mfc_tool::ui::PlaceLabelAndControl(port_label_, port_combo_, x, yy1 + label_y_pad, yy1, 76, row + 110, gap, 8) + gap;
-        const int pins_w = (std::max)(160, right - margin - x - pins_label_w - gap - 12);
-        mfc_tool::ui::PlaceLabelAndControl(pins_label_, pins_combo_, x, yy1 + label_y_pad, yy1, pins_w, row + 160, gap, 8);
+        x = mfc_tool::ui::PlaceLabelAndControl(port_label_, port_combo_, x, yy1 + label_y_pad, yy1, dpi.Scale(76), row + metrics.comboDrop110, gap, label_pad, label_h) + gap;
+        const int pins_w = (std::max)(dpi.Scale(160), right - margin - x - pins_label_w - gap - dpi.Scale(12));
+        mfc_tool::ui::PlaceLabelAndControl(pins_label_, pins_combo_, x, yy1 + label_y_pad, yy1, pins_w, row + metrics.comboDrop160, gap, label_pad, label_h);
 
         x = inner_left;
-        x = mfc_tool::ui::PlaceLabelAndControl(speed_label_, speed_edit_, x, yy2 + label_y_pad, yy2, 84, row, gap, 8) + gap;
-        x = mfc_tool::ui::PlaceLabelAndControl(addr_label_, addr_edit_, x, yy2 + label_y_pad, yy2, 70, row, gap, 8) + gap;
-        x = mfc_tool::ui::PlaceLabelAndControl(delay_label_, delay_edit_, x, yy2 + label_y_pad, yy2, 58, row, gap, 8) + gap;
-        mfc_tool::ui::SafeMoveWindow(enable_host_btn_, x, yy2, 104, row);
-        x += 110;
-        mfc_tool::ui::SafeMoveWindow(disable_host_btn_, x, yy2, 104, row);
+        x = mfc_tool::ui::PlaceLabelAndControl(speed_label_, speed_edit_, x, yy2 + label_y_pad, yy2, dpi.Scale(84), row, gap, label_pad, label_h) + gap;
+        x = mfc_tool::ui::PlaceLabelAndControl(addr_label_, addr_edit_, x, yy2 + label_y_pad, yy2, dpi.Scale(70), row, gap, label_pad, label_h) + gap;
+        x = mfc_tool::ui::PlaceLabelAndControl(delay_label_, delay_edit_, x, yy2 + label_y_pad, yy2, dpi.Scale(58), row, gap, label_pad, label_h) + gap;
+        mfc_tool::ui::SafeMoveWindow(enable_host_btn_, x, yy2, (std::max)(dpi.Scale(104), mfc_tool::ui::MeasureButtonMinWidth(enable_host_btn_)), row);
+        x += (std::max)(dpi.Scale(110), mfc_tool::ui::MeasureButtonMinWidth(enable_host_btn_) + gap);
+        mfc_tool::ui::SafeMoveWindow(disable_host_btn_, x, yy2, (std::max)(dpi.Scale(104), mfc_tool::ui::MeasureButtonMinWidth(disable_host_btn_)), row);
     }
 
     y += config_h + gap;
@@ -381,12 +398,12 @@ void CFwUploadTab::LayoutControls(const CRect& r) {
     {
         const int yy = y + group_top_pad;
         const int btn_h = row;
-        const int connect_w = (std::max)(112, mfc_tool::ui::MeasureButtonMinWidth(connect_target_btn_));
-        const int device_w = (std::max)(106, mfc_tool::ui::MeasureButtonMinWidth(get_device_btn_));
-        const int program_w = (std::max)(118, mfc_tool::ui::MeasureButtonMinWidth(program_btn_));
-        const int run_w = (std::max)(90, mfc_tool::ui::MeasureButtonMinWidth(run_aprom_btn_));
-        const int reset_w = (std::max)(102, mfc_tool::ui::MeasureButtonMinWidth(reset_target_btn_));
-        const int stop_w = (std::max)(68, mfc_tool::ui::MeasureButtonMinWidth(stop_btn_));
+        const int connect_w = (std::max)(dpi.Scale(112), mfc_tool::ui::MeasureButtonMinWidth(connect_target_btn_));
+        const int device_w = (std::max)(dpi.Scale(106), mfc_tool::ui::MeasureButtonMinWidth(get_device_btn_));
+        const int program_w = (std::max)(dpi.Scale(118), mfc_tool::ui::MeasureButtonMinWidth(program_btn_));
+        const int run_w = (std::max)(dpi.Scale(90), mfc_tool::ui::MeasureButtonMinWidth(run_aprom_btn_));
+        const int reset_w = (std::max)(dpi.Scale(102), mfc_tool::ui::MeasureButtonMinWidth(reset_target_btn_));
+        const int stop_w = (std::max)(dpi.Scale(68), mfc_tool::ui::MeasureButtonMinWidth(stop_btn_));
 
         mfc_tool::ui::SafeMoveWindow(connect_target_btn_, x, yy, connect_w, btn_h);
         x += connect_w + gap;
@@ -400,15 +417,15 @@ void CFwUploadTab::LayoutControls(const CRect& r) {
         x += reset_w + gap;
         mfc_tool::ui::SafeMoveWindow(stop_btn_, x, yy, stop_w, btn_h);
 
-        mfc_tool::ui::SafeMoveWindow(target_state_label_, inner_left, yy + row + 8, available_w - 24, 24);
-        mfc_tool::ui::SafeMoveWindow(progress_, inner_left, yy + row + 38, available_w - 24, 18);
-        mfc_tool::ui::SafeMoveWindow(progress_label_, inner_left, yy + row + 60, available_w - 24, 18);
+        mfc_tool::ui::SafeMoveWindow(target_state_label_, inner_left, yy + row + dpi.Scale(8), available_w - dpi.Scale(24), metrics.row24);
+        mfc_tool::ui::SafeMoveWindow(progress_, inner_left, yy + row + dpi.Scale(38), available_w - dpi.Scale(24), label_h);
+        mfc_tool::ui::SafeMoveWindow(progress_label_, inner_left, yy + row + dpi.Scale(60), available_w - dpi.Scale(24), label_h);
     }
 
     y += action_h + gap;
-    mfc_tool::ui::SafeMoveWindow(status_group_, left + margin, y, available_w, (std::max)(80, bottom - y - margin));
-    mfc_tool::ui::SafeMoveWindow(status_edit_, inner_left, y + group_top_pad, available_w - 24,
-                                 (std::max)(46, bottom - y - margin - group_top_pad - 8));
+    mfc_tool::ui::SafeMoveWindow(status_group_, left + margin, y, available_w, (std::max)(dpi.Scale(80), bottom - y - margin));
+    mfc_tool::ui::SafeMoveWindow(status_edit_, inner_left, y + group_top_pad, available_w - dpi.Scale(24),
+                                 (std::max)(dpi.Scale(46), bottom - y - margin - group_top_pad - dpi.Scale(8)));
 }
 
 void CFwUploadTab::SetConnected(bool connected) {

@@ -114,6 +114,13 @@ config::IniData AppState::ToIniData(const std::wstring& ini_path) const {
         {L"handshake_timeout_ms", xmodem.handshake_timeout_ms}
     };
 
+    out[L"USB_HID_ISP"] = {
+        {L"vid", usb_hid_isp.vid},
+        {L"pid", usb_hid_isp.pid},
+        {L"timeout_ms", usb_hid_isp.timeout_ms},
+        {L"device_label", usb_hid_isp.device_label}
+    };
+
     return out;
 }
 
@@ -154,6 +161,15 @@ void AppState::ApplyIniData(const config::IniData& data) {
     xmodem.image_path = FromExeRelativePath(GetValue(data, L"XMODEM", L"image_path", xmodem.image_path));
     if (ui.firmware_image_path.empty() && !xmodem.image_path.empty()) {
         ui.firmware_image_path = xmodem.image_path;
+    }
+
+    usb_hid_isp.vid = GetValue(data, L"USB_HID_ISP", L"vid", usb_hid_isp.vid);
+    usb_hid_isp.pid = GetValue(data, L"USB_HID_ISP", L"pid", usb_hid_isp.pid);
+    usb_hid_isp.timeout_ms = GetValue(data, L"USB_HID_ISP", L"timeout_ms", usb_hid_isp.timeout_ms);
+    usb_hid_isp.device_label = GetValue(data, L"USB_HID_ISP", L"device_label", usb_hid_isp.device_label);
+    usb_hid_isp.image_path = FromExeRelativePath(GetValue(data, L"USB_HID_ISP", L"image_path", usb_hid_isp.image_path));
+    if (ui.firmware_image_path.empty() && !usb_hid_isp.image_path.empty()) {
+        ui.firmware_image_path = usb_hid_isp.image_path;
     }
 }
 

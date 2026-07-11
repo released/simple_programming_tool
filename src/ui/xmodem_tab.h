@@ -23,6 +23,7 @@ public:
     void SaveState(mfc_tool::core::AppState* state) const;
     void OnShutdown();
     void RefreshSharedImageState();
+    void RefreshDpiLayout();
 
 protected:
     afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);

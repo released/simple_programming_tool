@@ -44,11 +44,20 @@ struct XmodemState {
     std::wstring image_path;
 };
 
+struct UsbHidIspState {
+    std::wstring vid = L"0x0416";
+    std::wstring pid = L"0x3F00";
+    std::wstring timeout_ms = L"2000";
+    std::wstring device_label = L"Auto Select";
+    std::wstring image_path;
+};
+
 struct AppState {
     UiState ui;
     FwUploadState fw_upload;
     UartIspState uart_isp;
     XmodemState xmodem;
+    UsbHidIspState usb_hid_isp;
 
     static AppState Default();
 
